@@ -1,0 +1,118 @@
+name: hermes-stack
+
+volumes:
+  hermes_data: {}
+  hermes_projects: {}
+  mnemosyne_store: {}
+  mnemosyne_qdrant: {}
+  caddy_data: {}
+  caddy_config: {}
+
+services:
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes
+    restart: unless-stopped
+    environment:
+      GONKA_API_KEY: "${GONKA_API_KEY}"
+      API_SERVER_ENABLED: "true"
+      API_SERVER_HOST: "0.0.0.0"
+      API_SERVER_KEY: "${HERMES_API_KEY}"
+      HERMES_API_KEY: "${HERMES_API_KEY}"
+      HERMES_STREAM_READ_TIMEOUT: "1800"
+      # the web dashboard runs as an s6 service INSIDE this same container.
+      # do not run it as a second container off the same /opt/data volume:
+      # that boots a second gateway and they fight over the data locks.
+      HERMES_DASHBOARD: "true"
+      HERMES_DASHBOARD_HOST: "0.0.0.0"
+      HERMES_DASHBOARD_PORT: "9119"
+      HERMES_DASHBOARD_INSECURE: "true"
+      HERMES_DASHBOARD_OAUTH_CLIENT_ID: "${HERMES_DASHBOARD_OAUTH_CLIENT_ID:-}"
+    volumes:
+      - hermes_data:/opt/data
+      - hermes_projects:/projects
+    command: gateway run
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8642/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  prometheus-proxy:
+    build: ./prometheus
+    image: prometheus-proxy:latest
+    container_name: prometheus-proxy
+    restart: unless-stopped
+    environment:
+      UPSTREAM_BASE_URL: "https://proxy.gonka.gg"
+      LOGDIR: "/log"
+      PROM_MAX_TOKENS: "32000"
+      PROM_READ_TIMEOUT: "300"
+    volumes:
+      - ./prometheus/log:/log
+
+  mnemosyne-store:
+    build: ./mnemosyne/store
+    image: mnemosyne-store:latest
+    container_name: mnemosyne-store
+    restart: unless-stopped
+    environment:
+      DATADIR: "/data"
+      QDRANT_URL: "http://mnemosyne-qdrant:6333"
+    volumes:
+      - mnemosyne_store:/data
+
+  mnemosyne-qdrant:
+    image: qdrant/qdrant:latest
+    container_name: mnemosyne-qdrant
+    restart: unless-stopped
+    volumes:
+      - mnemosyne_qdrant:/qdrant/storage
+
+  mnemosyne-gateway:
+    build: ./mnemosyne/gateway
+    image: mnemosyne-gateway:latest
+    container_name: mnemosyne-gateway
+    restart: unless-stopped
+    environment:
+      UPSTREAM_BASE_URL: "http://prometheus-proxy:8780"
+      STORE_URL: "http://mnemosyne-store:8782"
+      LOGDIR: "/log"
+    volumes:
+      - ./mnemosyne/gateway/log:/log
+    depends_on: [prometheus-proxy, mnemosyne-store]
+
+  gonka-router:
+    build: ./gonka-router
+    image: gonka-router:latest
+    container_name: gonka-router
+    restart: unless-stopped
+
+  hermes-web:
+    image: nginx:1.27-alpine
+    container_name: hermes-web
+    restart: unless-stopped
+    # localhost-only host port for SSH-tunnel access without a public domain.
+    ports:
+      - "127.0.0.1:9119:80"
+    volumes:
+      - ./hermes-web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [hermes]
+
+  # public TLS entrypoint. only starts with `--profile public` and a DOMAIN set.
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    profiles: ["public"]
+    environment:
+      DOMAIN: "${DOMAIN:-}"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [hermes-web]

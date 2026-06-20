@@ -1,0 +1,9 @@
+.env
+*/log/
+# layer sources are cloned by install.sh, not committed here
+/prometheus/
+/mnemosyne/
+/gonka-router/
+__pycache__/
+*.pyc
+.DS_Store

@@ -1,0 +1,8 @@
+# public reverse proxy for the Hermes dashboard, automatic Let's Encrypt TLS.
+# the domain comes from the DOMAIN env var (set in .env). HTTP-01 challenge,
+# so the domain's A record must point at this server and ports 80/443 be open.
+# if the domain is proxied by Cloudflare (orange cloud), switch to a Caddy
+# build with the cloudflare plugin and use tls { dns cloudflare {env.CF_API_TOKEN} }.
+{$DOMAIN} {
+	reverse_proxy hermes-web:80
+}
