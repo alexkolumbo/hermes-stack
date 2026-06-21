@@ -7,3 +7,9 @@
 __pycache__/
 *.pyc
 .DS_Store
+# team mode — generated, holds per-person secrets
+/docker-compose.team.yml
+/Caddyfile.team
+team/team.users
+team/team.secrets.env
+team/nginx-*.conf

@@ -1,0 +1,17 @@
+# One person per line:   id   telegram_bot_token   [gonka_key]
+#
+#   id                 1-20 lowercase letters/digits — used in the container name
+#                      (hermes-<id>) and the web subdomain (hermes-<id>.DOMAIN)
+#   telegram_bot_token from @BotFather, ONE bot per person (one token = one poller).
+#                      Leave blank for web-only access.
+#   gonka_key          OPTIONAL. Omit to use the shared GONKA_API_KEY from ../.env.
+#                      One shared key is fine for ~5 people; give heavy users or a
+#                      bigger team their own key for separate rate limits + billing.
+#
+# copy this file to team/team.users and edit.
+
+alice   1111111111:AAaa-bbccddeeff-GGhhiijjkkll
+bob     2222222222:BBbb-ccddeeffgg-HHiijjkkllmm
+carol   3333333333:CCcc-ddeeffgghh-IIjjkkllmmnn   sk-carols-own-gonka-key
+dave    4444444444:DDdd-eeffgghhii-JJkkllmmnnoo
+erin    5555555555:EEee-ffgghhiijj-KKllmmnnoopp

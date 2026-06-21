@@ -56,7 +56,8 @@ wait_health() {
 cmd_config() {
   say "applying critical Hermes config.yaml settings"
   load_env
-  docker exec -e GK="${GONKA_API_KEY}" hermes python3 - <<'PY'
+  # use the app's venv python — it has pyyaml; the container's system python3 does NOT
+  docker exec -e GK="${GONKA_API_KEY}" hermes /opt/hermes/.venv/bin/python - <<'PY'
 import os, yaml
 p = "/opt/data/config.yaml"
 c = yaml.safe_load(open(p)) or {}
