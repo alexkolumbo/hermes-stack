@@ -20,6 +20,12 @@ services:
       API_SERVER_KEY: "${HERMES_API_KEY}"
       HERMES_API_KEY: "${HERMES_API_KEY}"
       HERMES_STREAM_READ_TIMEOUT: "1800"
+      # Telegram (optional): put a bot token in .env to connect a bot. The token
+      # is how you wire Telegram in this stack — there's no field for it in the
+      # web dashboard. TELEGRAM_ALLOWED_USERS = comma-separated Telegram user ids
+      # allowed to talk to it (leave blank only with GATEWAY_ALLOW_ALL_USERS).
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN:-}"
+      TELEGRAM_ALLOWED_USERS: "${TELEGRAM_ALLOWED_USERS:-}"
       # the web dashboard runs as an s6 service INSIDE this same container.
       # do not run it as a second container off the same /opt/data volume:
       # that boots a second gateway and they fight over the data locks.

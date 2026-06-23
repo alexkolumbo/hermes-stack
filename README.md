@@ -86,9 +86,31 @@ These steps need you to log in through a browser, so they're separate commands:
 After `register-dash`, once your domain's DNS points at the server, the dashboard
 is live at `https://<domain>` behind a Nous Portal login.
 
-`vision` keeps Gonka as the main text model and only sends images to Grok. Don't
-switch the main model to Grok in the dashboard — that routes around the gateway
-and you lose the continuation and memory layers.
+`vision` keeps Gonka as the main text model and only sends images to Grok.
+
+About the model picker: the dashboard's "Set main model" only lists providers you
+log into by OAuth/portal (Nous, Grok) — **Gonka won't appear there, and that's
+expected.** Gonka is wired as a local custom provider (by `up` / `config`) pointed
+at the in-stack proxy, not as a dashboard provider. So don't switch the main model
+in that picker: it can only pick Nous or Grok, and choosing one overwrites the
+Gonka routing in `config.yaml` (you'd lose Gonka and the continuation / memory /
+guard layers). If the picker shows the model as `· nous` instead of the custom
+provider, run `./install.sh config` again to put it back on Gonka.
+
+## Telegram
+
+There's no field for the bot in the dashboard — you set a token in `.env`. Get one
+from @BotFather, then recreate Hermes:
+
+```bash
+# in .env:
+#   TELEGRAM_BOT_TOKEN=123456:AA...
+#   TELEGRAM_ALLOWED_USERS=<your telegram id>,<other id>
+docker compose up -d hermes
+```
+
+Get your Telegram id from @userinfobot. Without `TELEGRAM_ALLOWED_USERS` the bot
+denies everyone (unless you set `GATEWAY_ALLOW_ALL_USERS=true`).
 
 ## Re-running things
 
