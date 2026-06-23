@@ -112,6 +112,18 @@ docker compose up -d hermes
 Get your Telegram id from @userinfobot. Without `TELEGRAM_ALLOWED_USERS` the bot
 denies everyone (unless you set `GATEWAY_ALLOW_ALL_USERS=true`).
 
+## Staying up when the provider wobbles
+
+The proxy hardens the chat path, all on by default:
+
+- if a model spits out a repetition / Chinese-garbage roll, it's caught and
+  re-rolled — the client never sees it;
+- a brief provider hiccup (a dropped connection for a second) is ridden out with
+  backoff instead of erroring;
+- if Gonka is fully down, it falls back to **Grok** — reusing the OAuth token from
+  `./install.sh login-grok` (no separate key). If you haven't logged into Grok the
+  fallback simply stays off.
+
 ## Re-running things
 
 - Changed `.env`: `docker compose up -d hermes` (a plain restart won't reread it).

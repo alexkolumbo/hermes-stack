@@ -55,8 +55,18 @@ services:
       LOGDIR: "/log"
       PROM_MAX_TOKENS: "32000"
       PROM_READ_TIMEOUT: "300"
+      PROM_RETRY_BACKOFF: "1.5"
+      # the degeneration guard (catch a repetition/CJK-garbage roll and re-try) is
+      # on by default in the code. the fallback below kicks in only after the
+      # primary's retries are exhausted, and only if you've logged into Grok
+      # (./install.sh login-grok) — it reuses that OAuth token, no separate key.
+      PROM_FALLBACK_AUTH: "oauth"
+      PROM_FALLBACK_MODEL: "grok-4"
     volumes:
       - ./prometheus/log:/log
+      # read-only so the proxy can read the fresh OAuth token from auth.json for
+      # the Grok fallback (the agent keeps it refreshed). Only auth.json is read.
+      - hermes_data:/hermes-auth:ro
 
   mnemosyne-store:
     build: ./mnemosyne/store
