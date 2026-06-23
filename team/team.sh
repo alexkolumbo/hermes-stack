@@ -25,7 +25,7 @@ cmd_up() {
 cmd_config() {
   for c in $(docker ps --format '{{.Names}}' | grep -E '^hermes-' | sort); do
     gk=$(docker exec "$c" printenv GONKA_API_KEY 2>/dev/null | tr -d '\r\n')
-    docker exec -e GK="$gk" "$c" "$VPY" - <<'PY'
+    docker exec -i -e GK="$gk" "$c" "$VPY" - <<'PY'
 import os, yaml
 p = "/opt/data/config.yaml"
 c = yaml.safe_load(open(p)) or {}
