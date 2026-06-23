@@ -132,6 +132,7 @@ cmd_vision() {
 }
 
 cmd_verify() {
+  wait_health   # Hermes may still be booting right after a config/restart
   say "layer health"
   docker exec hermes sh -c '
     for u in prometheus-proxy:8780 mnemosyne-gateway:8781 mnemosyne-store:8782 gonka-router:8783; do
